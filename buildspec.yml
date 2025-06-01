@@ -1,25 +1,19 @@
-version 0.2
+version: 0.2
 
 phases:
   pre_build:
     commands:
-      - echo Logging in to amazon ECR...
+      - echo Logging in to Amazon ECR...
       - aws --version
-      - $(aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 545009860442.dkr.ecr.ap-south-1.amazon.aws.com)
-      - REPOSITORY_URI=545009860442.dkr.ecr.ap-south-1.amazonaws.com/cicd-website
-      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-
+      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 545009860442.dkr.ecr.ap-south-1.amazonaws.com
   build:
     commands:
+      - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t  $REPOSITORY_URI:$IMAGE_TAG .
-
+      - docker build -t cicd-website .
+      - docker tag cicd-website:latest 545009860442.dkr.ecr.ap-south-1.amazonaws.com/cicd-website:latest
   post_build:
     commands:
+      - echo Build completed on `date`
       - echo Pushing the Docker image...
-      - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo Writing image definitions file... 
-      - printf'[{"name":"cicd-website","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG >imagedefinitions
-
-artifacts:
-  files: imagedefinitions.json
+      - docker push 545009860442.dkr.ecr.ap-south-1.amazonaws.com/cicd-website:latest
